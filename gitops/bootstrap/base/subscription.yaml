@@ -1,0 +1,14 @@
+# OpenShift GitOps (Argo CD) operator subscription.
+# This is the only resource applied by deploy.sh before Argo CD is running.
+# Everything else is managed by the Argo CD Application.
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-gitops-operator
+  namespace: openshift-operators
+spec:
+  name: openshift-gitops-operator
+  channel: latest
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

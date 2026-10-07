@@ -1,0 +1,22 @@
+# Argo CD AppProject scoped to this demo.
+# Grants the Application access to all cluster resources — required because
+# Operator Subscriptions, OperatorGroups, and the Tackle CR are cluster-scoped
+# or installed into namespaces other than openshift-gitops.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mta-agents-demo
+  namespace: openshift-gitops
+spec:
+  description: MTA Agents Demo — minimal agentic AI factory stack
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

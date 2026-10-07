@@ -1,0 +1,8 @@
+# MTA 8.3 Operator namespace.
+# Ref: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.3/html-single/installing_the_migration_toolkit_for_applications/index
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

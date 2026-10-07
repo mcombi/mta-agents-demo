@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# MTA Agents stack — minimal agentic AI factory.
+# Sync wave ordering:
+#   0   Namespaces
+#   1   OperatorGroups
+#   2   Subscriptions (operators)
+#  10   Tackle CR + ConsoleLink
+#  15   Gateway CR (requires gateways.konveyor.io CRD registered by operator)
+#
+# The mta-qwen-credentials Secret (referenced by the Gateway CR) is NOT
+# managed here — it is provisioned by deploy.sh from .env values and must
+# exist before Argo CD reconciles the Gateway CR for the first time.
+
+resources:
+  # Wave 0-1: Agent Sandbox Operator (prerequisite for MTA Agents)
+  - agent-sandbox-operator/namespace.yaml
+  - agent-sandbox-operator/operatorgroup.yaml
+  - agent-sandbox-operator/subscription.yaml
+  # Wave 0-1: MTA Operator 8.3
+  - mta-operator/namespace.yaml
+  - mta-operator/operatorgroup.yaml
+  - mta-operator/subscription.yaml
+  # Wave 10: Tackle CR (agentic_enabled + no SSO) + ConsoleLink
+  - mta-instance/tackle.yaml
+  - mta-instance/consolelink.yaml
+  # Wave 15: LLM Gateway CR (env-substituted by deploy.sh before first sync)
+  - llm-gateway/gateway.yaml

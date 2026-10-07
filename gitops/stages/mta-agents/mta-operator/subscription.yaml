@@ -1,0 +1,18 @@
+# MTA 8.3 Operator subscription.
+# MTA Agents (Developer Preview) require channel stable-v8.3.
+# Upgrading from stable-v8.2 is irreversible once the InstallPlan is approved;
+# validate on a non-production cluster before deploying.
+# Ref: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.3/html-single/installing_the_migration_toolkit_for_applications/index
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: mta-operator
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: mta-operator
+  channel: stable-v8.3
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

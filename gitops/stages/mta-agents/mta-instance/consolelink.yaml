@@ -1,0 +1,19 @@
+# ConsoleLink adds an MTA entry to the OpenShift application launcher menu.
+# The href is a placeholder — deploy.sh patches it to the live MTA route after
+# the instance is ready, or you can update it manually:
+#   MTA_HOST=$(oc get route mta -n openshift-mta -o jsonpath='{.spec.host}')
+#   oc patch consolelink mta --type=merge \
+#     -p "{\"spec\":{\"href\":\"https://${MTA_HOST}\"}}"
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: https://www.redhat.com/favicon.ico
+    section: Red Hat applications
+  href: https://placeholder.mta.example.com
+  location: ApplicationMenu
+  text: Migration Toolkit for Applications

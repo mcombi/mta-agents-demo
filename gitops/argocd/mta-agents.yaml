@@ -1,0 +1,62 @@
+# Argo CD Application for the MTA Agents stack.
+# deploy.sh substitutes GIT_REPO_URL and GIT_REPO_BRANCH from .env before
+# applying this manifest, so the committed values are placeholders.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mta-agents
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: mta-agents-demo
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: /gitops/stages/mta-agents
+spec:
+  project: mta-agents-demo
+  source:
+    repoURL: "${GIT_REPO_URL}"
+    targetRevision: "${GIT_REPO_BRANCH}"
+    path: gitops/stages/mta-agents
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-mta
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideDiff=true
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    # OLM stamps startingCSV after the first install — ignore to avoid drift
+    - group: operators.coreos.com
+      kind: Subscription
+      jsonPointers:
+        - /spec/startingCSV
+    # Namespace labels/annotations are managed by OpenShift
+    - group: ""
+      kind: Namespace
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+    # OperatorGroup annotations are stamped by OLM
+    - group: operators.coreos.com
+      kind: OperatorGroup
+      jsonPointers:
+        - /metadata/annotations
+    # The Gateway CR endpoint and model fields are patched by deploy.sh
+    # and must not be reverted to the committed placeholder values
+    - group: konveyor.io
+      kind: Gateway
+      name: qwen-external
+      jsonPointers:
+        - /spec/endpoint
+        - /spec/model/name
+        - /spec/model/contextWindow

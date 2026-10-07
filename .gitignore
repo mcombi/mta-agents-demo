@@ -1,0 +1,15 @@
+# Local environment — never commit
+.env
+
+# macOS
+.DS_Store
+
+# Editor artifacts
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Temporary files produced by deploy.sh
+/tmp/
+*.tmp

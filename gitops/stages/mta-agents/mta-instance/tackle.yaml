@@ -1,0 +1,30 @@
+# MTA 8.3 Tackle instance with MTA Agents enabled (Developer Preview).
+#
+# Key decisions vs. the full rhoai3-coding-demo stack:
+# - feature_auth_required: false — uses the MTA built-in admin account instead
+#   of federating to an external OIDC provider (no RHBK dependency).
+# - kai_llm_proxy_enabled / kai_solution_server_enabled: false — Kai proxy and
+#   Solution Server are not part of this demo.
+# - agentic_enabled: "true" — deploys agentic-controller and installs the
+#   operator-managed defaults: 5 skill cards, 1 skill collection, 3 agents
+#   (migration-plan-agent, migration-execute-agent, migration-verify-agent),
+#   and the java-ee-to-quarkus workflow.
+# - agentic_steer_enabled: "true" — allows interactive user steering during runs.
+# - rwx_supported: "false" — no ODF/RWX storage required.
+#
+# Ref: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.3/html-single/configuring_and_managing_the_migration_toolkit_for_applications_user_interface/configuring-and-using-mta-agents_use
+apiVersion: tackle.konveyor.io/v1alpha1
+kind: Tackle
+metadata:
+  name: mta
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  rwx_supported: "false"
+  kai_llm_proxy_enabled: false
+  kai_solution_server_enabled: false
+  feature_auth_required: false
+  agentic_enabled: "true"
+  agentic_steer_enabled: "true"

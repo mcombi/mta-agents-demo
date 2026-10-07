@@ -1,0 +1,9 @@
+# Agent Sandbox Operator namespace.
+# The operator is installed cluster-wide but its controller pods land here.
+# Ref: https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_red_hat_build_of_agent_sandbox/install-agent-sandbox-overview_agent-sandbox
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-sandbox-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

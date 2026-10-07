@@ -1,0 +1,21 @@
+# Red Hat build of Agent Sandbox Operator.
+# IMPORTANT: verify the channel name before deploying:
+#   oc get packagemanifests agent-sandbox-operator \
+#     -n openshift-marketplace \
+#     -o jsonpath='{.status.defaultChannel}'
+# The channel below is derived from OpenShift Sandboxed Containers 1.13 docs
+# and must be confirmed against the operator catalog on your cluster.
+# Ref: https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_red_hat_build_of_agent_sandbox/install-agent-sandbox-overview_agent-sandbox
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: agent-sandbox-operator
+  namespace: agent-sandbox-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: agent-sandbox-operator
+  channel: stable
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

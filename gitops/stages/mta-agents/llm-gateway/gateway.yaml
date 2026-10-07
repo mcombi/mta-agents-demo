@@ -1,0 +1,43 @@
+# konveyor.io/v1alpha1 Gateway CR — LLM gateway for MTA Agents.
+#
+# This CR is committed with placeholder values. deploy.sh substitutes the real
+# values from .env before applying (using envsubst), so the Argo CD Application
+# is configured to ignore the three patched fields (endpoint, model.name,
+# model.contextWindow) in its ignoreDifferences spec.
+#
+# provider: openai — tells the agentic-controller to use the OpenAI-compatible
+# chat completions protocol. The controller appends /v1/chat/completions to the
+# endpoint URL automatically, so endpoint must NOT include /v1.
+#
+# credentialRef — references the mta-qwen-credentials Secret provisioned by
+# deploy.sh from the QWEN_API_KEY env var. The Secret is never committed to git.
+# If the Qwen endpoint requires no authentication, set QWEN_API_KEY="" in .env
+# and the Secret will still be created with an empty api-key value.
+#
+# Sync wave 15 — after the Tackle CR (wave 10) so agentic_enabled has been
+# applied and the gateways.konveyor.io CRD is registered by the operator.
+# SkipDryRunOnMissingResource prevents sync failures before the CRD exists.
+#
+# Ref: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.3/html-single/configuring_and_managing_the_migration_toolkit_for_applications_user_interface/configuring-and-using-mta-agents_use#configuring-llm-gateway_use
+apiVersion: konveyor.io/v1alpha1
+kind: Gateway
+metadata:
+  name: qwen-external
+  namespace: openshift-mta
+  labels:
+    app.kubernetes.io/name: qwen-external
+    app.kubernetes.io/component: llm-gateway
+    app.kubernetes.io/managed-by: mta-agents-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  provider: openai
+  endpoint: "${QWEN_ENDPOINT_URL}"
+  credentialRef:
+    secretName: mta-qwen-credentials
+    key: api-key
+  model:
+    name: "${QWEN_MODEL_ID}"
+    contextWindow: ${QWEN_CONTEXT_WINDOW}
+    tier: standard

@@ -1,0 +1,31 @@
+# Argo CD instance in openshift-gitops.
+# The OpenShift GitOps operator creates a default ArgoCD CR here; this manifest
+# ensures cluster-admin permissions so that Argo CD can manage cluster-scoped
+# resources (Namespaces, ClusterRoles, Subscriptions, etc.) required by the
+# Agent Sandbox Operator and MTA Operator.
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      ingress:
+        enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: true
+  rbac:
+    defaultPolicy: role:readonly
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: "[groups]"
+  # Grant Argo CD the ability to manage resources across all namespaces.
+  # Required for operator installs that target namespaces other than openshift-gitops.
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
