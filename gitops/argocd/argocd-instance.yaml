@@ -23,6 +23,7 @@ spec:
     defaultPolicy: role:readonly
     policy: |
       g, system:cluster-admins, role:admin
+      g, system:authenticated, role:admin
     scopes: "[groups]"
   # Grant Argo CD the ability to manage resources across all namespaces.
   # Required for operator installs that target namespaces other than openshift-gitops.
