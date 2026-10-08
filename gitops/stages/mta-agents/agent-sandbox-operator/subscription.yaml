@@ -1,10 +1,8 @@
 # Red Hat build of Agent Sandbox Operator.
-# The channel is intentionally omitted so OLM resolves the catalog default.
-# To pin to a specific channel, run on the target cluster:
+# Channel confirmed with:
 #   oc get packagemanifests agent-sandbox-operator \
 #     -n openshift-marketplace \
 #     -o jsonpath='{.status.defaultChannel}'
-# then add:  channel: <value>
 # Ref: https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_red_hat_build_of_agent_sandbox/install-agent-sandbox-overview_agent-sandbox
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -15,6 +13,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   name: agent-sandbox-operator
+  channel: preview-0.9
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
