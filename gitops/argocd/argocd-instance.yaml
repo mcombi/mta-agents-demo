@@ -3,7 +3,7 @@
 # ensures cluster-admin permissions so that Argo CD can manage cluster-scoped
 # resources (Namespaces, ClusterRoles, Subscriptions, etc.) required by the
 # Agent Sandbox Operator and MTA Operator.
-apiVersion: argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
 metadata:
   name: openshift-gitops
