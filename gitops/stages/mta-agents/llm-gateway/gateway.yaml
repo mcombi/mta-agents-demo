@@ -33,11 +33,11 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   provider: openai
-  endpoint: "${QWEN_ENDPOINT_URL}"
+  endpoint: "https://placeholder.qwen.example.com"
   credentialRef:
     secretName: mta-qwen-credentials
     key: api-key
   model:
-    name: "${QWEN_MODEL_ID}"
-    contextWindow: ${QWEN_CONTEXT_WINDOW}
+    name: "placeholder-model"
+    contextWindow: 131072
     tier: standard

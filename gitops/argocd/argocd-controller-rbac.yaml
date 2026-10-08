@@ -1,0 +1,19 @@
+# Grant the Argo CD application controller cluster-admin so it can manage
+# CRDs registered at runtime — specifically tackles.tackle.konveyor.io and
+# gateways.konveyor.io, which are registered by the MTA Operator only after
+# the Tackle CR is applied. Without this binding Argo CD cannot create or
+# update those resources and the sync fails.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-app-controller-cluster-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
