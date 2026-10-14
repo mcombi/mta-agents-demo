@@ -51,12 +51,5 @@ spec:
       kind: OperatorGroup
       jsonPointers:
         - /metadata/annotations
-    # The Gateway CR endpoint and model fields are patched by deploy.sh
-    # and must not be reverted to the committed placeholder values
-    - group: konveyor.io
-      kind: Gateway
-      name: qwen-external
-      jsonPointers:
-        - /spec/endpoint
-        - /spec/model/name
-        - /spec/model/contextWindow
+    # NOTE: Gateway CRs are no longer managed by Argo CD (removed from
+    # kustomization.yaml). They are applied imperatively by deploy.sh.

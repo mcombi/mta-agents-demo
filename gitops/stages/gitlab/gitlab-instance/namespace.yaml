@@ -1,0 +1,9 @@
+# Namespace for the GitLab CE instance.
+# Kept separate from gitlab-system (operator) so the GitLab CR and all its
+# workloads (webservice, gitaly, postgresql, redis, etc.) are isolated.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

@@ -1,0 +1,9 @@
+# GitLab Operator namespace.
+# The operator controller pods land here; GitLab instance pods go in the
+# gitlab namespace (managed by the GitLab CR).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitlab-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

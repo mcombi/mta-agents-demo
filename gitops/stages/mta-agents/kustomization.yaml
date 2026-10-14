@@ -25,5 +25,7 @@ resources:
   # Wave 10: Tackle CR (agentic_enabled + no SSO) + ConsoleLink
   - mta-instance/tackle.yaml
   - mta-instance/consolelink.yaml
-  # Wave 15: LLM Gateway CR (env-substituted by deploy.sh before first sync)
-  - llm-gateway/gateway.yaml
+  # NOTE: LLM Gateway CRs are NOT managed by Argo CD.
+  # They are applied imperatively by deploy.sh from llm-gateway/gateway-template.yaml,
+  # driven by the GATEWAY_N_* variables in .env. This allows any number of gateways
+  # to be added without git changes.

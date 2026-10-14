@@ -1,0 +1,20 @@
+# GitLab Operator (Kubernetes) from the Certified Operators catalog.
+# Manages the full lifecycle of GitLab CE instances via the GitLab CR.
+# Channel confirmed with:
+#   oc get packagemanifest gitlab-operator-kubernetes \
+#     -n openshift-marketplace \
+#     -o jsonpath='{.status.defaultChannel}'
+# Ref: https://docs.gitlab.com/operator/
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gitlab-operator-kubernetes
+  namespace: gitlab-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: gitlab-operator-kubernetes
+  channel: stable
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

@@ -7,7 +7,8 @@
 #   3. Tackle CR is Ready.
 #   4. agentic-controller Deployment is Ready.
 #   5. Default MTA Agents are Ready (migration-plan, migration-execute, migration-verify).
-#   6. Gateway CR qwen-external is Verified.
+#   6. All Gateway CRs in openshift-mta are Verified.
+#   7. A <name>-credentials Secret exists for each Gateway CR.
 #
 # Usage:
 #   ./validate.sh              — run all checks (exits 1 if any fail)
@@ -115,44 +116,72 @@ if [[ "${AGENTS_FOUND}" == "false" ]]; then
   echo "             They appear after the agentic-controller is Running."
 fi
 
-# ─── Check 6: Gateway CR ───────────────────────────────────────────────────
-print_separator "Check 6: Gateway CR qwen-external"
-GW_EXISTS="$(oc get gateway.konveyor.io qwen-external -n openshift-mta \
-  --ignore-not-found=true -o name 2>/dev/null || echo "")"
-if [[ -z "${GW_EXISTS}" ]]; then
-  fail "Gateway CR qwen-external not found in openshift-mta."
-  echo "       The Gateway CRD is registered only after agentic_enabled takes effect."
+# ─── Check 6: Gateway CRs ──────────────────────────────────────────────────
+print_separator "Check 6: Gateway CRs"
+if ! oc get crd gateways.konveyor.io &>/dev/null; then
+  fail "gateways.konveyor.io CRD not found. The MTA operator may still be installing."
   echo "       Check: oc get crd gateways.konveyor.io"
-  echo "       Check: oc get gateways.konveyor.io -n openshift-mta"
+  echo "       Check: oc get csv -n openshift-mta"
 else
-  GW_VERIFIED="$(oc get gateway.konveyor.io qwen-external -n openshift-mta \
-    -o jsonpath='{.status.verified}' 2>/dev/null || echo "false")"
-  GW_ENDPOINT="$(oc get gateway.konveyor.io qwen-external -n openshift-mta \
-    -o jsonpath='{.spec.endpoint}' 2>/dev/null || echo "")"
-  GW_MODEL="$(oc get gateway.konveyor.io qwen-external -n openshift-mta \
-    -o jsonpath='{.spec.model.name}' 2>/dev/null || echo "")"
-  if [[ "${GW_VERIFIED}" == "true" ]]; then
-    ok "Gateway qwen-external: Verified (endpoint: ${GW_ENDPOINT}, model: ${GW_MODEL})"
+  # Collect all Gateway CR names in openshift-mta
+  GW_NAMES="$(oc get gateways.konveyor.io -n openshift-mta \
+    --no-headers -o custom-columns=NAME:.metadata.name 2>/dev/null || echo "")"
+
+  if [[ -z "${GW_NAMES}" ]]; then
+    fail "No Gateway CRs found in openshift-mta."
+    echo "       Run deploy.sh to apply Gateway CRs from .env, or:"
+    echo "         oc get gateways.konveyor.io -n openshift-mta"
   else
-    fail "Gateway qwen-external: Verified=${GW_VERIFIED} (expected true)"
-    echo "       Endpoint : ${GW_ENDPOINT}"
-    echo "       Model    : ${GW_MODEL}"
-    echo "       Check endpoint URL and API key, then:"
-    echo "         oc logs -n openshift-mta deploy/agentic-controller"
+    GW_COUNT=0
+    while IFS= read -r GW_NAME; do
+      [[ -z "${GW_NAME}" ]] && continue
+      GW_COUNT=$((GW_COUNT + 1))
+      GW_VERIFIED="$(oc get gateway.konveyor.io "${GW_NAME}" -n openshift-mta \
+        -o jsonpath='{.status.verified}' 2>/dev/null || echo "false")"
+      GW_ENDPOINT="$(oc get gateway.konveyor.io "${GW_NAME}" -n openshift-mta \
+        -o jsonpath='{.spec.endpoint}' 2>/dev/null || echo "")"
+      GW_MODEL="$(oc get gateway.konveyor.io "${GW_NAME}" -n openshift-mta \
+        -o jsonpath='{.spec.model.name}' 2>/dev/null || echo "")"
+      if [[ "${GW_VERIFIED}" == "true" ]]; then
+        ok "Gateway ${GW_NAME}: Verified (endpoint: ${GW_ENDPOINT}, model: ${GW_MODEL})"
+      else
+        fail "Gateway ${GW_NAME}: Verified=${GW_VERIFIED} (expected true)"
+        echo "       Endpoint : ${GW_ENDPOINT}"
+        echo "       Model    : ${GW_MODEL}"
+        echo "       Check endpoint URL and API key, then:"
+        echo "         oc logs -n openshift-mta deploy/agentic-controller"
+      fi
+    done <<< "${GW_NAMES}"
+    echo "       Total Gateway CRs found: ${GW_COUNT}"
   fi
 fi
 
-# ─── Check 7: mta-qwen-credentials Secret ──────────────────────────────────
-print_separator "Check 7: mta-qwen-credentials Secret"
-SECRET_EXISTS="$(oc get secret mta-qwen-credentials -n openshift-mta \
-  --ignore-not-found=true -o name 2>/dev/null || echo "")"
-if [[ -n "${SECRET_EXISTS}" ]]; then
-  ok "Secret mta-qwen-credentials exists in openshift-mta."
+# ─── Check 7: Gateway credential Secrets ───────────────────────────────────
+print_separator "Check 7: Gateway credential Secrets"
+if ! oc get crd gateways.konveyor.io &>/dev/null; then
+  warn "Skipping credential Secret check — gateways.konveyor.io CRD not yet available."
 else
-  fail "Secret mta-qwen-credentials not found in openshift-mta."
-  echo "       Run deploy.sh to provision it, or:"
-  echo "         oc create secret generic mta-qwen-credentials \\"
-  echo "           -n openshift-mta --from-literal=api-key=<your-api-key>"
+  GW_NAMES="$(oc get gateways.konveyor.io -n openshift-mta \
+    --no-headers -o custom-columns=NAME:.metadata.name 2>/dev/null || echo "")"
+
+  if [[ -z "${GW_NAMES}" ]]; then
+    warn "No Gateway CRs found — skipping credential Secret check."
+  else
+    while IFS= read -r GW_NAME; do
+      [[ -z "${GW_NAME}" ]] && continue
+      SECRET_NAME="${GW_NAME}-credentials"
+      SECRET_EXISTS="$(oc get secret "${SECRET_NAME}" -n openshift-mta \
+        --ignore-not-found=true -o name 2>/dev/null || echo "")"
+      if [[ -n "${SECRET_EXISTS}" ]]; then
+        ok "Secret ${SECRET_NAME} exists in openshift-mta."
+      else
+        fail "Secret ${SECRET_NAME} not found in openshift-mta."
+        echo "       Run deploy.sh to provision it, or:"
+        echo "         oc create secret generic ${SECRET_NAME} \\"
+        echo "           -n openshift-mta --from-literal=api-key=<your-api-key>"
+      fi
+    done <<< "${GW_NAMES}"
+  fi
 fi
 
 # ─── Summary ────────────────────────────────────────────────────────────────
@@ -171,6 +200,7 @@ if [[ ${FAIL} -gt 0 ]]; then
   echo "  oc get tackle mta -n openshift-mta -o yaml"
   echo "  oc get deployments -n openshift-mta"
   echo "  oc get gateways.konveyor.io -n openshift-mta"
+  echo "  oc get secrets -n openshift-mta | grep credentials"
   echo "  oc logs -n openshift-mta deploy/agentic-controller"
   echo "  oc get application mta-agents -n openshift-gitops -o yaml"
   if [[ "${NO_EXIT}" == "false" ]]; then

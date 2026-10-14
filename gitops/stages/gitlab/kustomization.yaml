@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# GitLab CE stage — operator + instance.
+# Sync wave ordering:
+#   0   Namespaces (gitlab-system, gitlab)
+#   1   OperatorGroup
+#   2   Subscription (gitlab-operator-kubernetes, certified-operators)
+#  10   GitLab CR (requires apps.gitlab.com/v1beta1 CRD registered by operator)
+#
+# The gitlab-initial-root-password Secret (referenced by the GitLab CR) is
+# NOT managed here — it is provisioned by deploy.sh from GITLAB_ROOT_PASSWORD
+# and must exist before Argo CD reconciles the GitLab CR for the first time.
+
+resources:
+  # Wave 0-2: GitLab Operator
+  - gitlab-operator/namespace.yaml
+  - gitlab-operator/operatorgroup.yaml
+  - gitlab-operator/subscription.yaml
+  # Wave 0: GitLab instance namespace
+  - gitlab-instance/namespace.yaml
+  # Wave 10: GitLab CE instance
+  - gitlab-instance/gitlab.yaml

@@ -1,0 +1,67 @@
+# GitLab CE instance managed by the GitLab Operator.
+#
+# Key decisions:
+# - global.appConfig.signupEnabled: false — public registration is off;
+#   the admin creates accounts manually via Admin → Users.
+# - global.initialRootPassword — references a Secret provisioned by
+#   deploy.sh from the GITLAB_ROOT_PASSWORD env var; never committed to git.
+# - nginx-ingress.enabled: false — the GitLab Operator on OpenShift creates
+#   native Route objects instead of Ingress objects, so the bundled nginx
+#   ingress controller is not required.
+# - certmanager.install: false — OpenShift Routes handle TLS termination
+#   through the cluster's default wildcard certificate.
+# - prometheus/gitlab-runner: disabled — not required for this demo.
+# - Storage classes use the cluster's Ceph-backed storage:
+#     gitaly    → cephfs (RWX, required for shared repository storage)
+#     postgresql → ceph-rbd (RWO block storage)
+#     redis     → ceph-rbd (RWO block storage)
+#
+# Sync wave 10: applied after the operator CSV is Succeeded and the
+# apps.gitlab.com/v1beta1 CRD is registered.
+# SkipDryRunOnMissingResource: prevents sync failure on the first wave
+# while the CRD is still being registered.
+#
+# Ref: https://docs.gitlab.com/operator/gitlab_chart_configuration.html
+apiVersion: apps.gitlab.com/v1beta1
+kind: GitLab
+metadata:
+  name: gitlab
+  namespace: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  chart:
+    values:
+      global:
+        hosts:
+          domain: apps.cluster-c4mcr.dyn.redhatworkshops.io
+        ingress:
+          configureCertmanager: false
+        initialRootPassword:
+          secret: gitlab-initial-root-password
+          key: password
+        appConfig:
+          signupEnabled: false
+      nginx-ingress:
+        enabled: false
+      certmanager:
+        install: false
+      prometheus:
+        install: false
+      gitlab-runner:
+        install: false
+      gitaly:
+        persistence:
+          storageClass: ocs-external-storagecluster-cephfs
+          size: 50Gi
+      postgresql:
+        primary:
+          persistence:
+            storageClass: ocs-external-storagecluster-ceph-rbd
+            size: 10Gi
+      redis:
+        master:
+          persistence:
+            storageClass: ocs-external-storagecluster-ceph-rbd
+            size: 5Gi

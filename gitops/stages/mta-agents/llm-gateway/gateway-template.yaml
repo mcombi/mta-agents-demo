@@ -1,0 +1,40 @@
+# konveyor.io/v1alpha1 Gateway CR — LLM gateway template for MTA Agents.
+#
+# THIS FILE IS A TEMPLATE — it is NOT in kustomization.yaml and is NOT applied
+# by Argo CD. deploy.sh reads this file, substitutes the GW_* variables for
+# each gateway defined in .env, and applies the resulting manifest directly.
+#
+# Variables substituted by deploy.sh per gateway iteration:
+#   GW_NAME           — CR name and credential Secret name prefix (e.g. qwen-external)
+#   GW_ENDPOINT       — Base URL of the OpenAI-compatible endpoint (no /v1 suffix)
+#   GW_MODEL_ID       — Model identifier as served by the endpoint
+#   GW_CONTEXT_WINDOW — Integer token context window (e.g. 131072)
+#   GW_TIER           — Gateway tier label (e.g. standard, premium)
+#
+# The credential Secret (${GW_NAME}-credentials) is created by deploy.sh
+# from GATEWAY_N_API_KEY before this CR is applied.
+#
+# Sync wave annotation is intentionally kept on the CR so that if a future
+# operator feature re-introduces CRD-aware apply ordering, the wave hint is
+# already present. It has no effect when applied via oc apply directly.
+#
+# Ref: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.3/html-single/configuring_and_managing_the_migration_toolkit_for_applications_user_interface/configuring-and-using-mta-agents_use#configuring-llm-gateway_use
+apiVersion: konveyor.io/v1alpha1
+kind: Gateway
+metadata:
+  name: ${GW_NAME}
+  namespace: openshift-mta
+  labels:
+    app.kubernetes.io/name: ${GW_NAME}
+    app.kubernetes.io/component: llm-gateway
+    app.kubernetes.io/managed-by: mta-agents-demo
+spec:
+  provider: openai
+  endpoint: "${GW_ENDPOINT}"
+  credentialRef:
+    secretName: ${GW_NAME}-credentials
+    key: api-key
+  model:
+    name: "${GW_MODEL_ID}"
+    contextWindow: ${GW_CONTEXT_WINDOW}
+    tier: ${GW_TIER}

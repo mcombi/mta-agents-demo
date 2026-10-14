@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: gitlab-operator
+  namespace: gitlab-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec: {}
